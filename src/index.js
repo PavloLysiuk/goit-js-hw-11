@@ -18,7 +18,6 @@ selectors.spinner.classList.add('is-hidden');
 let totalHits = 0;
 
 selectors.searchForm.addEventListener('submit', onSearch);
-window.addEventListener('scroll', onScroll);
 // selectors.loadMoreBtn.addEventListener('click', onLoadMore);
 
 async function onSearch(e) {
@@ -61,9 +60,6 @@ async function onSearch(e) {
   } catch (error) {
     selectors.spinner.classList.add('is-hidden');
     console.error('An error occurred during the search:', error);
-    console.error('Error response:', error.response);
-    console.error('Error request:', error.request);
-    console.error('Error config:', error.config);
     Notify.failure('Oops! Something went wrong. Please try again later.');
   }
 }
@@ -86,28 +82,41 @@ async function onSearch(e) {
 // }
 
 let page = 1;
+let isFetching = false;
 
 async function onScroll() {
   const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
   const scrollPosition = scrollTop + clientHeight;
 
-  if (scrollPosition >= scrollHeight - 10 && totalHits > 0) {
+  if (scrollPosition >= scrollHeight - 10 && totalHits > 0 && !isFetching) {
     await infiniteScroll();
   }
 }
 
 async function infiniteScroll() {
-  try {
-    const images = await axiosApiService.fetchImages(page + 1);
+  if (isFetching || totalHits === 0) return;
 
-    if (totalHits <= page * 40) {
+  isFetching = true;
+
+  try {
+    const nextPage = page + 1;
+
+    if (nextPage * axiosApiService.axiosConfig.params.per_page > totalHits) {
       window.removeEventListener('scroll', onScroll);
       Notify.info("We're sorry, but you've reached the end of search results.");
       return;
     }
 
-    totalHits -= images.hits.length;
-    page += 1;
+    const images = await axiosApiService.fetchImages(nextPage);
+
+    if (images.hits.length === 0) {
+      window.removeEventListener('scroll', onScroll);
+      Notify.info("We're sorry, but you've reached the end of search results.");
+      return;
+    }
+
+    totalHits = images.totalHits;
+    page = nextPage;
 
     addToHTML(galleryMarkup(images.hits));
     galleryLightbox.refresh();
@@ -117,8 +126,12 @@ async function infiniteScroll() {
     Notify.failure(
       'Oops! Something went wrong while loading more images. Please try again later.'
     );
+  } finally {
+    isFetching = false;
   }
 }
+
+window.addEventListener('scroll', onScroll);
 
 function addToHTML(markup) {
   selectors.gallery.insertAdjacentHTML('beforeend', markup);

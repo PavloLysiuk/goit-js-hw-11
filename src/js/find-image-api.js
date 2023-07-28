@@ -15,7 +15,7 @@ export default class AxiosApiService {
         key: API_KEY,
         image_type: 'photo',
         orientation: 'horizontal',
-        per_page: 40,
+        per_page: 50,
         safesearch: true,
         searchQuery: '',
         page: 1,
