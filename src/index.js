@@ -36,7 +36,7 @@ async function onSearch(e) {
 
     const images = await axiosApiService.fetchImages();
 
-    if (images.hits.length === 0) {
+    if (!images.hits.length) {
       selectors.spinner.classList.add('is-hidden');
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -71,7 +71,7 @@ async function onSearch(e) {
 
 //   addToHTML(galleryMarkup(images.hits));
 
-//   if (totalHits === 0 || totalHits < 0) {
+//   if (!totalHits || totalHits < 0) {
 //     selectors.loadMoreBtn.style.display = 'none';
 //     Notify.info("We're sorry, but you've reached the end of search results.");
 //     return;
@@ -94,7 +94,7 @@ async function onScroll() {
 }
 
 async function infiniteScroll() {
-  if (isFetching || totalHits === 0) return;
+  if (isFetching || !totalHits) return;
 
   isFetching = true;
 
@@ -109,7 +109,7 @@ async function infiniteScroll() {
 
     const images = await axiosApiService.fetchImages(nextPage);
 
-    if (images.hits.length === 0) {
+    if (!images.hits.length) {
       window.removeEventListener('scroll', onScroll);
       Notify.info("We're sorry, but you've reached the end of search results.");
       return;
