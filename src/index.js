@@ -26,13 +26,15 @@ async function onSearch(e) {
     removeMarkup();
     selectors.spinner.classList.remove('is-hidden');
 
-    if (e.currentTarget.elements.searchQuery.value.trim() === '') {
+    const searchQuery = e.currentTarget.elements.searchQuery.value.trim();
+
+    if (searchQuery === '') {
       selectors.spinner.classList.add('is-hidden');
       return Notify.failure('Please, enter a search query.');
     }
 
     axiosApiService.resetPage();
-    axiosApiService.query = e.currentTarget.elements.searchQuery.value.trim();
+    axiosApiService.query = searchQuery;
 
     const images = await axiosApiService.fetchImages();
 
